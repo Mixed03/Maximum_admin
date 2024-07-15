@@ -29,4 +29,6 @@ const collectionSchema = new mongoose.Schema({
 
 const Collection =mongoose.models.Collection || mongoose.model("Collection", collectionSchema);
 
+//"Collection as data store name in MongoDB"
+
 export default Collection;

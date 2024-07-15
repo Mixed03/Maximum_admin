@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { connectToDB } from "@/lib/mongoDB";
+import Order from "@/lib/models/Order";
+import Customer from "@/lib/models/Customer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,43 +15,45 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { cartItems, customer } = await req.json();
+    const { cartItems, customer, formData, uploadedImages } = await req.json();
 
-    if (!cartItems || !customer) {
+    if (!cartItems || !customer || !formData) {
       return new NextResponse("Not enough data to checkout", { status: 400 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      shipping_address_collection: {
-        allowed_countries: ["US", "CA"],
-      },
-      shipping_options: [
-        { shipping_rate: "shr_1MfufhDgraNiyvtnDGef2uwK" },
-        { shipping_rate: "shr_1OpHFHDgraNiyvtnOY4vDjuY" },
-      ],
-      line_items: cartItems.map((cartItem: any) => ({
-        price_data: {
-          currency: "cad",
-          product_data: {
-            name: cartItem.item.title,
-            metadata: {
-              productId: cartItem.item._id,
-              ...(cartItem.size && { size: cartItem.size }),
-              ...(cartItem.color && { color: cartItem.color }),
-            },
-          },
-          unit_amount: cartItem.item.price * 100,
-        },
-        quantity: cartItem.quantity,
-      })),
-      client_reference_id: customer.clerkId,
-      success_url: `${process.env.ECOMMERCE_STORE_URL}/payment_success`,
-      cancel_url: `${process.env.ECOMMERCE_STORE_URL}/cart`,
+    await connectToDB();
+
+    const orderItems = cartItems.map((cartItem: any) => ({
+      product: cartItem.item._id,
+      color: cartItem.color || "N/A",
+      size: cartItem.size || "N/A",
+      quantity: cartItem.quantity,
+    }));
+
+    const newOrder = new Order({
+      customerClerkId: customer.clerkId,
+      products: orderItems,
+      shippingAddress: formData,
+      totalAmount: cartItems.reduce((acc: number, cartItem: any) => acc + cartItem.item.price * cartItem.quantity, 0),
+      image: uploadedImages, // Ensure images are included in the order
     });
 
-    return NextResponse.json(session, { headers: corsHeaders });
+    await newOrder.save();
+
+    let customerDoc = await Customer.findOne({ clerkId: customer.clerkId });
+
+    if (customerDoc) {
+      customerDoc.orders.push(newOrder._id);
+    } else {
+      customerDoc = new Customer({
+        ...customer,
+        orders: [newOrder._id],
+      });
+    }
+
+    await customerDoc.save();
+
+    return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (err) {
     console.log("[checkout_POST]", err);
     return new NextResponse("Internal Server Error", { status: 500 });

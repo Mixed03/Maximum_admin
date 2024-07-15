@@ -73,6 +73,12 @@ const config: Config = {
       ],
     },
     extend: {
+      fontFamily: {
+        urbanist: ['Urbanist', 'sans-serif'],
+      },
+      fontWeight: {
+        black: '900',
+      },
       colors: {
         "white-1": "#F8F8F8",
         "grey-1": "#616161",

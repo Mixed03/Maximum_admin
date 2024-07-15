@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
@@ -6,13 +6,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { navLinks } from "@/lib/constants";
+import { useEffect } from "react";
 
 const LeftSideBar = () => {
   const pathname = usePathname();
 
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }, []);
+
   return (
     <div className="h-screen left-0 top-0 sticky p-10 flex flex-col gap-16 bg-blue-2 shadow-xl max-lg:hidden">
-      <Image src="/maximumLogo.png" alt="logo" width={150} height={70} />
+      {/* <Image src="/maximumLogo.png" alt="logo" width={150} height={70} /> */}
+      <p className="text-heading3-bold font-urbanist font-black">
+        MAXIMUM STORE
+      </p>
 
       <div className="flex flex-col gap-12">
         {navLinks.map((link) => (

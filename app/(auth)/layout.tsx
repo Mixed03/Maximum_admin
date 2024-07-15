@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: "Admin dashboard to manage Maximum's data",
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{

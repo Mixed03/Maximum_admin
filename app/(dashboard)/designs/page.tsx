@@ -8,30 +8,30 @@ import Loader from "@/components/custom ui/Loader";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/custom ui/DataTable";
-import { columns } from "@/components/products/ProductColumns";
-import { ProductType } from "@/lib/types";
+import { columns } from "@/components/designs/DesignColumns";
+import { DesignType } from "@/lib/types";
 
-const Products = () => {
+const Designs = () => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<ProductType[]>([]);
+  const [designs, setDesigns] = useState<DesignType[]>([]);
 
-  const getProducts = async () => {
+  const getDesigns = async () => {
     try {
-      const res = await fetch("/api/products", {
+      const res = await fetch("/api/designs", {
         method: "GET",
       });
       const data = await res.json();
-      setProducts(data);
+      setDesigns(data);
       setLoading(false);
     } catch (err) {
-      console.log("[products_GET]", err);
+      console.log("[designs_GET]", err);
     }
   };
 
   useEffect(() => {
-    getProducts();
+    getDesigns();
   }, []);
 
   return loading ? (
@@ -39,19 +39,19 @@ const Products = () => {
   ) : (
     <div className="px-10 py-5">
       <div className="flex items-center justify-between">
-        <p className="text-heading2-bold">Products</p>
+        <p className="text-heading2-bold">Designs</p>
         <Button
           className="bg-black text-white"
-          onClick={() => router.push("/products/new")}
+          onClick={() => router.push("/designs/new")}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Create Product
+          Create Design
         </Button>
       </div>
       <Separator className="bg-grey-1 my-4" />
-      <DataTable columns={columns} data={products} searchKey="title" />
+      <DataTable columns={columns} data={designs} searchKey="title" />
     </div>
   );
 };
 
-export default Products;
+export default Designs;

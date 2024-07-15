@@ -22,6 +22,7 @@ const orderSchema = new mongoose.Schema({
   },
   shippingRate: String,
   totalAmount: Number,
+  image: [String], // Ensure this line is present
   createdAt: {
     type: Date,
     default: Date.now,

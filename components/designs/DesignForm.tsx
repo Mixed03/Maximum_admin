@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 
@@ -22,56 +22,32 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Delete from "../custom ui/Delete";
 import MultiText from "../custom ui/MultiText";
-import MultiSelect from "../custom ui/MultiSelect";
 import Loader from "../custom ui/Loader";
-import MultiSizeInput from "../custom ui/MultiSizeInput"; // Import the new component
-import { ProductType, CollectionType } from "@/lib/types";
+import { DesignType } from "@/lib/types";
 
 const formSchema = z.object({
   title: z.string().min(2).max(20),
   description: z.string().min(2).max(500).trim(),
   media: z.array(z.string()),
-  category: z.string(),
-  collections: z.array(z.string()),
-  tags: z.array(z.string()),
-  sizes: z.array(
-    z.object({
-      size: z.string(),
-      stock: z.number().min(0),
-    })
-  ).optional(),
+  sizes: z.array(z.string()),
   colors: z.array(z.string()),
   price: z.coerce.number().min(0.1),
   expense: z.coerce.number().min(0.1),
-  inventory: z.coerce.number().min(0),
 });
 
-interface ProductFormProps {
-  initialData?: ProductType | null; // Must have "?" to make it optional
+interface DesignFormProps {
+  initialData?: DesignType | null; // Must have "?" to make it optional
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
+const DesignForm: React.FC<DesignFormProps> = ({ initialData }) => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [collections, setCollections] = useState<CollectionType[]>([]);
-
-  const getCollections = async () => {
-    try {
-      const res = await fetch("/api/collections", {
-        method: "GET",
-      });
-      const data = await res.json();
-      setCollections(data);
-      setLoading(false);
-    } catch (err) {
-      console.log("[collections_GET]", err);
-      toast.error("Something went wrong! Please try again.");
-    }
-  };
 
   useEffect(() => {
-    getCollections();
+    // Logging for debugging
+    console.log("DesignForm mounted");
+    setLoading(false);
   }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -79,36 +55,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     defaultValues: initialData
       ? {
           ...initialData,
-          collections: initialData.collections.map(
-            (collection) => collection._id
-          ),
         }
       : {
           title: "",
           description: "",
           media: [],
-          category: "",
-          collections: [],
-          tags: [],
           sizes: [],
           colors: [],
           price: 0.1,
           expense: 0.1,
-          inventory: 0,
         },
   });
-
-  const sizes = useWatch({
-    control: form.control,
-    name: "sizes",
-  });
-
-  useEffect(() => {
-    if (sizes) {
-      const totalInventory = sizes.reduce((acc, size) => acc + (size?.stock || 0), 0);
-      form.setValue("inventory", totalInventory);
-    }
-  }, [sizes, form]);
 
   const handleKeyPress = (
     e:
@@ -124,21 +81,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     try {
       setLoading(true);
       const url = initialData
-        ? `/api/products/${initialData._id}`
-        : "/api/products";
+        ? `/api/designs/${initialData._id}`
+        : "/api/designs";
       const res = await fetch(url, {
         method: "POST",
         body: JSON.stringify(values),
       });
       if (res.ok) {
         setLoading(false);
-        toast.success(`Product ${initialData ? "updated" : "created"}`);
-        window.location.href = "/products";
-        router.push("/products");
+        toast.success(`Design ${initialData ? "updated" : "created"}`);
+        window.location.href = "/designs";
+        router.push("/designs");
       }
     } catch (err) {
-      console.log("[products_POST]", err);
+      console.log("[designs_POST]", err);
       toast.error("Something went wrong! Please try again.");
+      setLoading(false);
     }
   };
 
@@ -148,11 +106,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     <div className="p-10">
       {initialData ? (
         <div className="flex items-center justify-between">
-          <p className="text-heading2-bold">Edit Product</p>
-          <Delete id={initialData._id} item="product" />
+          <p className="text-heading2-bold">Edit Design</p>
+          <Delete id={initialData._id} item="design" />
         </div>
       ) : (
-        <p className="text-heading2-bold">Create Product</p>
+        <p className="text-heading2-bold">Create Design</p>
       )}
       <Separator className="bg-grey-1 mt-4 mb-7" />
       <Form {...form}>
@@ -253,35 +211,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             />
             <FormField
               control={form.control}
-              name="category"
+              name="sizes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Category"
-                      {...field}
-                      onKeyDown={handleKeyPress}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-1" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
+                  <FormLabel>Sizes</FormLabel>
                   <FormControl>
                     <MultiText
-                      placeholder="Tags"
+                      placeholder="Sizes"
                       value={field.value}
-                      onChange={(tag) => field.onChange([...field.value, tag])}
-                      onRemove={(tagToRemove) =>
+                      onChange={(size) =>
+                        field.onChange([...field.value, size])
+                      }
+                      onRemove={(sizeToRemove) =>
                         field.onChange([
-                          ...field.value.filter((tag) => tag !== tagToRemove),
+                          ...field.value.filter(
+                            (size) => size !== sizeToRemove
+                          ),
                         ])
                       }
                     />
@@ -290,35 +235,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 </FormItem>
               )}
             />
-            {collections.length > 0 && (
-              <FormField
-                control={form.control}
-                name="collections"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Collections</FormLabel>
-                    <FormControl>
-                      <MultiSelect
-                        placeholder="Collections"
-                        collections={collections}
-                        value={field.value}
-                        onChange={(_id) =>
-                          field.onChange([...field.value, _id])
-                        }
-                        onRemove={(idToRemove) =>
-                          field.onChange([
-                            ...field.value.filter(
-                              (collectionId) => collectionId !== idToRemove
-                            ),
-                          ])
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-1" />
-                  </FormItem>
-                )}
-              />
-            )}
             <FormField
               control={form.control}
               name="colors"
@@ -345,46 +261,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="sizes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sizes</FormLabel>
-                  <FormControl>
-                    <MultiSizeInput
-                      value={field.value || []} // Provide a default empty array
-                      onChange={(sizes) => field.onChange(sizes)}
-                      onRemove={(index) =>
-                        field.onChange(
-                          field.value?.filter((_, i) => i !== index) || []
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-1" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="inventory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>In Stock</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Inventory"
-                      {...field}
-                      onKeyDown={handleKeyPress}
-                      disabled
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-1" />
-                </FormItem>
-              )}
-            />
           </div>
 
           <div className="flex gap-10">
@@ -393,7 +269,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             </Button>
             <Button
               type="button"
-              onClick={() => router.push("/products")}
+              onClick={() => router.push("/designs")}
               className="bg-black text-white"
             >
               Discard
@@ -405,4 +281,4 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   );
 };
 
-export default ProductForm;
+export default DesignForm;

@@ -1,3 +1,4 @@
+// api/orders/customers/[customerId]/route.ts
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import { connectToDB } from "@/lib/mongoDB";
@@ -16,7 +17,7 @@ export const GET = async (
 
     return NextResponse.json(orders, { status: 200 });
   } catch (err) {
-    console.log("[customerId_GET", err);
+    console.log("[customerId_GET]", err);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };

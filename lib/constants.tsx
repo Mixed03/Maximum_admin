@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Shapes,
   ShoppingBag,
+  Stamp,
   Tag,
   UsersRound,
 } from "lucide-react";
@@ -32,4 +33,9 @@ export const navLinks = [
     icon: <UsersRound />,
     label: "Customers",
   },
+  // {
+  //   url: "/designs",
+  //   icon: <Stamp />,
+  //   label: "Designs",
+  // },
 ];
