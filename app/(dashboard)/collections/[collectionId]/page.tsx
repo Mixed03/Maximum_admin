@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 
 import Loader from "@/components/custom ui/Loader"
 import CollectionForm from "@/components/collections/CollectionForm"
+import { CollectionType } from "@/lib/types"
 
 const CollectionDetails = ({ params }: { params: { collectionId: string }}) => {
   const [loading, setLoading] = useState(true)

@@ -3,6 +3,7 @@
 import Loader from '@/components/custom ui/Loader';
 import DesignForm from '@/components/designs/DesignForm';
 import React, { useEffect, useState } from 'react';
+import { DesignType } from '@/lib/types';
 
 const DesignDetails = ({ params }: { params: { designId: string } }) => {
   const [loading, setLoading] = useState(true);
